@@ -2,20 +2,44 @@
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 @WebServlet("/consulta")
 public class Consulta extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	
+	DataSource pool;
+	@Override
+	public void init() throws ServletException {
+		
+		super.init();
+		
+		try {
+			InitialContext contexto = new InitialContext();
+			
+			 pool = (DataSource)contexto.lookup("java:comp/env/jdbc/mysql_tiendalibros");
+			
+			if (pool == null) {
+				throw new ServletException("Error al acceder al POOL de conexiones: POOL NULL");
+			}
+			
+		} catch (NamingException e) {
+			System.out.println("Error al acceder al POOL de conexiones catch");
+			e.printStackTrace();
+		}
+	}
 
 	public Consulta() {
 		super();
@@ -42,12 +66,12 @@ public class Consulta extends HttpServlet {
 			Class.forName("com.mysql.jdbc.Driver");
 
 			// Conectamos con la base de datos.
-			String url = "jdbc:mysql://localhost/TiendaLibros";
-			String usuario = "librero";
-			String contrasenya = "Ageofempires2";
+//			String url = "jdbc:mysql://localhost/TiendaLibros";
+//			String usuario = "librero";
+//			String contrasenya = "Ageofempires2";
 
 			// Ejecutamos una consulta SQL
-			con = DriverManager.getConnection(url, usuario, contrasenya);
+			con = pool.getConnection();
 
 			String sql = "select * from libros where autor=?";
 			stmt = con.prepareStatement(sql);
